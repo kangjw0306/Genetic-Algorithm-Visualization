@@ -1,16 +1,4 @@
-import processing.core.*; 
-import processing.data.*; 
-import processing.event.*; 
-import processing.opengl.*; 
-
-import java.util.HashMap; 
-import java.util.ArrayList; 
-import java.io.File; 
-import java.io.BufferedReader; 
-import java.io.PrintWriter; 
-import java.io.InputStream; 
-import java.io.OutputStream; 
-import java.io.IOException; 
+import processing.core.*;
 
 public class neural_network extends PApplet {
 
@@ -44,7 +32,7 @@ public void draw() {
     //genetic algorithm
     test.calculateFitness();
     test.naturalSelection();
-    test.mutateDemBabies();
+    test.mutateClones();
   } else {
     //if any of the dots are still alive then update and then show them
 
@@ -55,7 +43,6 @@ public void draw() {
 class Brain {
   PVector[] directions;//series of vectors which get the dot to the goal (hopefully)
   int step = 0;
-
 
   Brain(int size) {
     directions = new PVector[size];
@@ -114,7 +101,7 @@ class Dot {
     brain = new Brain(1000);//new brain with 1000 instructions
 
     //start the dots at the bottom of the window with a no velocity or acceleration
-    pos = new PVector(width/2, height- 10);
+    pos = new PVector((float) width /2, height- 10);
     vel = new PVector(0, 0);
     acc = new PVector(0, 0);
   }
@@ -137,7 +124,7 @@ class Dot {
   //moves the dot according to the brains directions
   public void move() {
 
-    if (brain.directions.length > brain.step) {//if there are still directions left then set the acceleration as the next PVector in the direcitons array
+    if (brain.directions.length > brain.step) {//if there are still directions left then set the acceleration as the next PVector in the directions array
       acc = brain.directions[brain.step];
       brain.step++;
     } else {//if at the end of the directions array then the dot is dead
@@ -180,7 +167,7 @@ class Dot {
 
   //---------------------------------------------------------------------------------------------------------------------------------------
   //clone it 
-  public Dot gimmeBaby() {
+  public Dot offspring() {
     Dot baby = new Dot();
     baby.brain = brain.clone();//babies have the same brain as their parents
     return baby;
@@ -216,20 +203,20 @@ class Population {
   //-------------------------------------------------------------------------------------------------------------------------------
   //update all dots 
   public void update() {
-    for (int i = 0; i< dots.length; i++) {
-      if (dots[i].brain.step > minStep) {//if the dot has already taken more steps than the best dot has taken to reach the goal
-        dots[i].dead = true;//then it dead
+    for (Dot dot : dots) {
+      if (dot.brain.step > minStep) {//if the dot has already taken more steps than the best dot has taken to reach the goal
+        dot.dead = true;//then it dead
       } else {
-        dots[i].update();
+        dot.update();
       }
     }
   }
 
   //-----------------------------------------------------------------------------------------------------------------------------------
-  //calculate all the fitnesses
+  //calculate all the fitness
   public void calculateFitness() {
-    for (int i = 0; i< dots.length; i++) {
-      dots[i].calculateFitness();
+    for (Dot dot : dots) {
+      dot.calculateFitness();
     }
   }
 
@@ -237,8 +224,8 @@ class Population {
   //------------------------------------------------------------------------------------------------------------------------------------
   //returns whether all the dots are either dead or have reached the goal
   public boolean allDotsDead() {
-    for (int i = 0; i< dots.length; i++) {
-      if (!dots[i].dead && !dots[i].reachedGoal) { 
+    for (Dot dot : dots) {
+      if (!dot.dead && !dot.reachedGoal) {
         return false;
       }
     }
@@ -257,14 +244,14 @@ class Population {
     calculateFitnessSum();
 
     //the champion lives on 
-    newDots[0] = dots[bestDot].gimmeBaby();
+    newDots[0] = dots[bestDot].offspring();
     newDots[0].isBest = true;
     for (int i = 1; i< newDots.length; i++) {
       //select parent based on fitness
       Dot parent = selectParent();
 
       //get baby from them
-      newDots[i] = parent.gimmeBaby();
+      newDots[i] = parent.offspring();
     }
 
     dots = newDots.clone();
@@ -276,8 +263,8 @@ class Population {
   //you get it
   public void calculateFitnessSum() {
     fitnessSum = 0;
-    for (int i = 0; i< dots.length; i++) {
-      fitnessSum += dots[i].fitness;
+    for (Dot dot : dots) {
+      fitnessSum += dot.fitness;
     }
   }
 
@@ -285,7 +272,7 @@ class Population {
 
   //chooses dot from the population to return randomly(considering fitness)
 
-  //this function works by randomly choosing a value between 0 and the sum of all the fitnesses
+  //this function works by randomly choosing a value between 0 and the sum of all the fitness
   //then go through all the dots and add their fitness to a running sum and if that sum is greater than the random value generated that dot is chosen
   //since dots with a higher fitness function add more to the running sum then they have a higher chance of being chosen
   public Dot selectParent() {
@@ -294,10 +281,10 @@ class Population {
 
     float runningSum = 0;
 
-    for (int i = 0; i< dots.length; i++) {
-      runningSum+= dots[i].fitness;
+    for (Dot dot : dots) {
+      runningSum += dot.fitness;
       if (runningSum > rand) {
-        return dots[i];
+        return dot;
       }
     }
 
@@ -308,7 +295,7 @@ class Population {
 
   //------------------------------------------------------------------------------------------------------------------------------------------
   //mutates all the brains of the babies
-  public void mutateDemBabies() {
+  public void mutateClones() {
     for (int i = 1; i< dots.length; i++) {
       dots[i].brain.mutate();
     }
@@ -331,11 +318,11 @@ class Population {
     //if this dot reached the goal then reset the minimum number of steps it takes to get to the goal
     if (dots[bestDot].reachedGoal) {
       minStep = dots[bestDot].brain.step;
-      println("step:", minStep);
+      println("", minStep);
     }
   }
 }
-  
+
   @Override
   public void settings() {  size(800, 800); }
   static public void main(String[] passedArgs) {
