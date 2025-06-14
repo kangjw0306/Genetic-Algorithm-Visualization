@@ -1,4 +1,4 @@
 # Genetic Algorithm
 An example of a Genetic Algorithm expressed through visual components
 
-Coded in java using the Processing backend
+Coded in Java using the Processing backend
